@@ -70,7 +70,7 @@ function preload() {
 
 
 function setup() {
-    createCanvas(1024, 576);
+    createCanvas(windowWidth, windowHeight);
     reset()
 
 }
