@@ -32,13 +32,14 @@ var game_score;
 var flagpole;
 var lives;
 
-var jumpSound;
+var platforms
 
+var jumpSound;
 var enemies;
 var flagIMG;
 var dogeCoin
 var enemy
-
+var randomColor = [255, 0, 240]
 let resetEventListener = (e) => {
     if (e.code == 'Space') {
         reset()
@@ -72,6 +73,7 @@ function preload() {
 function setup() {
     createCanvas(1024, 576);
     reset()
+    randomColor = [random(0, 255), random(0, 255), random(0, 255)]
 
 }
 
@@ -150,6 +152,14 @@ function draw() {
     renderFlagpole();
 
 
+    // -------------------------------------------
+    // Draw Platform
+    // -------------------------------------------
+
+    for (var i = 0; i < platforms.length; i++) {
+        // console.log("p", platforms[i])
+        platforms[i].draw()
+    }
     // check if the player dies
 
     checkPlayerDie();
@@ -245,20 +255,30 @@ function draw() {
     // Logic to make the game character rise and fall.
     //---------------------------------------------------------------
 
+    var isPlatformContact = false
+    for (var i = 0; i < platforms.length; i++) {
+        isPlatformContact = platforms[i].checkContact(gameChar_world_x, gameChar_y)
+        break;
+    }
+
+
     if (isPlummeting) {
         gameChar_y -= 3;
     }
 
-    if (isFalling) {
+    if (isFalling && !isPlatformContact) {
+
         gameChar_y += 3;
         isPlummeting = false;
     }
 
-    if (gameChar_y == floorPos_y) {
+    if (gameChar_y == floorPos_y || isPlatformContact) {
         isFalling = false;
     }
 
-    if (gameChar_y < (floorPos_y - 200)) {
+    if (gameChar_y !== floorPos_y && !isPlatformContact) {
+
+
         isFalling = true;
     }
 
@@ -353,11 +373,13 @@ function keyPressed()
 
     {
 
-        if (gameChar_y == floorPos_y) {
+        if (!isFalling) {
 
             isFalling = true;
 
+
             gameChar_y = gameChar_y - 180;
+
             jumpSound.play();
 
         }
@@ -693,6 +715,7 @@ function drawCollectable(t_collectable) {
 
 }
 
+// pop(0);
 
 // ------------------------------------------------  
 // Function to check character has collected an item.
@@ -793,12 +816,12 @@ function Enemy(x, y, range) {
     this.draw = function () {
 
         this.update();
-        // draw bomb
+        // draw enemy dragon
         image(enemy, this.currentX - 40, this.y - 70, 100, 100)
 
 
-        //wobble the bomb
-        this.currentX += random(-2, 1);
+        //flying the dragon
+        // this.currentX += random(-2, 1);
         this.y += random(-1, 1);
 
     }
@@ -819,7 +842,41 @@ function Enemy(x, y, range) {
     }
 
 }
+function createPlatform(x, y, length) {
 
+    var p = {
+
+        x,
+        y,
+        length,
+        draw: function () {
+            fill(randomColor[0], randomColor[1], randomColor[2])
+            strokeWeight(2)
+            stroke(200)
+            rect(this.x, this.y, this.length, 20)
+        },
+        checkContact: function (gc_x, gc_y) {
+            console.log("checkcontact", gc_x, gc_y)
+            if (gc_x > this.x && gc_x < (this.x + this.length)) {
+
+
+                var d = this.y - gc_y
+                if (d >= 0 && d < 10) {
+                    console.log("onplatform")
+
+
+                    return true
+                }
+                console.log("WIOHOO inline")
+
+                return false
+
+            }
+
+        }
+    }
+    return p
+}
 
 function startGame() {
 
@@ -893,7 +950,11 @@ function startGame() {
     { x_pos: 3000, y_pos: floorPos_y - 70, size: 45, isFound: false },
     { x_pos: 3100, y_pos: floorPos_y - 70, size: 45, isFound: false },
     { x_pos: -240, y_pos: floorPos_y - 70, size: 45, isFound: false },
-    { x_pos: -190, y_pos: floorPos_y - 70, size: 45, isFound: false }];
+    { x_pos: -190, y_pos: floorPos_y - 70, size: 45, isFound: false },
+    { x_pos: 2420, y_pos: floorPos_y - 300, size: 45, isFound: false }
+
+
+];
 
     canyon = [{ x_pos: 600, y_pos: 432, width: 50, height: 145 },
     { x_pos: 1400, y_pos: 432, width: 50, height: 145 },
@@ -908,9 +969,13 @@ function startGame() {
 
     flagpole = { isReached: false, x_pos: 2650 };
 
+    let platform1 = createPlatform(2400, floorPos_y - 100, 100)
+    
+    platforms = [platform1]
 
     game_score = 0;
     let enemy1 = new Enemy(700, floorPos_y, 100)
+
     enemies = [enemy1];
 
 }
